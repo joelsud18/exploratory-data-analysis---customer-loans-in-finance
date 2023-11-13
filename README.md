@@ -6,4 +6,3 @@ This is an Ai Core project with the aim of conducting Exploratory Data Analysis 
 ## File Structure:
 Within the repository is:
 - 'data_extraction.py': This should be run to define the 'RDSDatabaseConnector' class which establishes a connection to the database by creating a SQLAlchemy engine then writing this to a csv file ('loan_payments.csv').
-- 'loan_payments.csv': this is the subsequent csv file containing all the tabular loan payments data that was extracted from the RDS, that will be analysed.
