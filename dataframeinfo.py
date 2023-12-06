@@ -277,3 +277,194 @@ class DataFrameInfo:
             print(f'{column}: {round(DataFrame[column].skew(),2)}') # Print column name and skewness rounded to 2 d.p.
             skewness[column] = DataFrame[column].skew() # Add column and its skewness to dictionary.
         return skewness
+    
+    def calculate_column_percentage(self, DataFrame: pd.DataFrame, target_column_name: str, total_column_name: str):
+
+        '''
+        This method is used to calculate the percentage of one column's sum over another column's sum.
+
+        Parameters:
+            DataFrame (pd.DataFrame): The dataframe to which this method will be applied.
+            target_column_name (str): The name of the column for which the percentage will be calculated.
+            total_column_name (str): The name of the column for which the percentage will be calculated out of, the total.
+
+        Returns:
+            percentage (float): The percentage that the target column's sum occupies out of the total column's sum.
+        '''
+
+        target_column_sum = DataFrame[target_column_name].sum() # Sum of values in target column.
+        total_column_sum = DataFrame[total_column_name].sum() # Sum of values in total column.
+
+        percentage = (target_column_sum / total_column_sum) * 100 # Calculate of target value over total value.
+        return percentage
+
+    def calculate_percentage(self, target, total):
+
+        '''
+        This method is used to calculate the percentage of one value over another.
+
+        Parameters:
+            target: The value for which the percentage will be calculated.
+            total: The value which the percentage will be calculated out of, the total.
+
+        Returns:
+            percentage (float): The percentage that the target occupies out of the total.
+        '''
+
+        percentage = (target/total)*100
+        return percentage
+    
+    def calculate_total_collections_over_period(self, DataFrame: pd.DataFrame, period: int):
+        
+        '''
+        This method is used to provide a projection on the total collections over a period in months.
+
+        Parameters:
+            DataFrame (pd.DataFrame): The dataframe to which this method will be applied.
+            period (int): The number of months the forecast is for.
+        
+        Returns:
+            dict: the total collections, loan amount and loan outstanding over the period.
+        '''
+
+        collections_df = DataFrame.copy() # Create copy of the dataframe.
+
+        final_payment_date = collections_df['last_payment_date'].max() # identifies the final payment date.
+
+        def calculate_term_end(row): # Function used to calculate term end according to term length and issue date.
+            if row['term'] == '36 months': # In 36 month terms
+                return row['issue_date'] + 36 # Term end will be 36 months after issue date.
+            elif row['term'] == '60 months': # In 60 month terms
+                return row['issue_date'] + 60 # Term end will be 60 months after issue date.
+
+        # Apply the function to create the new 'term_end_date' column
+        collections_df['term_end_date'] = collections_df.apply(calculate_term_end, axis=1)
+
+        collections_df['mths_left'] = collections_df['term_end_date'] - final_payment_date # calculate number of months between term end and final payment date.
+        collections_df['mths_left'] = collections_df['mths_left'].apply(lambda x: x.n) # Extract integer value from 'mths_left' column.
+
+        collections_df = collections_df[collections_df['mths_left']>0] # filter in only current loans.
+
+        def calculate_collections(row): # Define function to sum collections over projection period.
+            if row['mths_left'] >= period: # If months left in term are equal to or greater than projection period.
+                return row['instalment'] * period #  projection period * Installments.
+            elif row['mths_left'] < period: # If less than projection period months left in term.
+                return row['instalment'] * row['mths_left'] # number of months left * installments.
+
+        collections_df['collections_over_period'] = collections_df.apply(calculate_collections, axis=1) # Apply method to each row to get total collections in projected perid.
+
+        collection_sum = collections_df['collections_over_period'].sum()
+        total_loan = collections_df['loan_amount'].sum()
+        total_loan_left = total_loan - collections_df['total_payment'].sum()
+
+        return {'total_collections': collection_sum, 'total_loan': total_loan, 'total_loan_outstanding': total_loan_left}
+    
+    def monthly_collection_percentage_projections(self, DataFrame: pd.DataFrame, period: int):
+
+        '''
+        This method applies the calculate_total_collections_over_period() method over a range of months and for each month retrieves the percentage of collection out of 1) the total loan amount and 2) the outstanding loan amount.
+
+        Parameters:
+            DataFrame (pd.DataFrame): The dataframe to which this method will be applied.
+            period (int): The number of months the forecast is for.
+        
+        Returns:
+            dict: a sictionary containing two lists: 
+                1) collections as a percentage of total loan amount for each month in period.
+                2) collections as a percentage of outstanding loan amount for each month in period.
+        '''
+
+        # Generate empty lists that will contain percentages of collection out of total and outstanding loan.
+        percentage_of_loan = []
+        percentage_of_outstanding = []
+
+        for month in range(1, (period+1)): # For each month in 1-6.
+            projections = DataFrameInfo.calculate_total_collections_over_period(self, DataFrame, period=month) # produce dictionaries containing collection, total loan and outstaniding loan amounts.
+            
+            total_collections = projections['total_collections'] # Extract total collection amount from dictionary.
+            total_loan = projections['total_loan'] # Extract total loan amount from dictionary.
+            total_loan_outstanding = projections['total_loan_outstanding'] # Extract total loan amount outstanding from dictionary.
+            
+            percent_total_loan = DataFrameInfo.calculate_percentage(self, total_collections, total_loan) # Calculate percentage of collections out of total loan.
+            percent_outstanding_loan = DataFrameInfo.calculate_percentage(self, total_collections, total_loan_outstanding) # Calculate percentage of collections out of outstanding loan.
+
+            # Add percentages to lists.
+            percentage_of_loan.append(percent_total_loan)
+            percentage_of_outstanding.append(percent_outstanding_loan)
+        
+        return {'total_loan_percent': percentage_of_loan, 'outstanding_loan_percent': percentage_of_outstanding}
+    
+    def count_value_in_column(self, DataFrame: pd.DataFrame, column_name: str, value):
+
+        '''
+        This method returns a count of the number of times a value appears in a column.
+
+        Parameters:
+            DataFrame (pd.DataFrame): The dataframe to which this method will be applied.
+            column_name (str): The name of the column that will be checked.
+            value: The value that will be counted.
+
+        Returns:
+            int: The number of times the value appears in the column.
+        '''
+
+        return len(DataFrame[DataFrame[column_name]==value]) # Return length of dataframe that only contains specified value.
+    
+    def revenue_lost_by_month(self, DataFrame: pd.DataFrame):
+
+        '''
+        This method is used to return a list with the cumulative revenue lost for each month of the remaining term.
+
+        Parameters:
+            DataFrame (pd.DataFrame): The dataframe to which this method is applied.
+        
+        Returns:
+            revenue_lost (list): A list which contains the cumulative revenue lost value for each month of the remaining term.
+        '''
+
+        df = DataFrame.copy() # Create a copy of dataframe to avoid altering original.
+
+        df['term_completed'] = (df['last_payment_date'] - df['issue_date']) # Calculating how much of each term was completed.
+        df['term_completed'] = df['term_completed'].apply(lambda x: x.n) # Converting the row into an integer.
+
+        def calculate_term_remaining(row): # Function used to calculate months remaining in term for each row.
+            if row['term'] == '36 months': # In 36 month terms
+                return 36 - row['term_completed'] # Term remaining is term length - how much of term was completed.
+            elif row['term'] == '60 months': # In 60 month terms
+                return 60 - row['term_completed'] # Term remaining is term length - how much of term was completed.
+
+        df['term_left'] = df.apply(calculate_term_remaining, axis=1) # Applying function to calculate term left for each loan.
+        
+        revenue_lost = [] # Empty list
+        cumulative_revenue_lost = 0
+        for month in range(1, (df['term_left'].max()+1)): # For each month in the maximum number of months left in any term.
+            df = df[df['term_left']>0] # Filter out any terms which have no months left.
+            cumulative_revenue_lost += df['instalment'].sum() # Cumulatively sum the total number of monthly instalments.
+            revenue_lost.append(cumulative_revenue_lost) # Add this cumulative sum to list of revenue projected to be lost.
+            df['term_left'] = df['term_left'] - 1 # Take away one from the number of terms left.
+        
+        return revenue_lost
+
+    def calculate_total_expected_revenue(self, DataFrame: pd.DataFrame):
+        
+        '''
+        This method is used to calculate the total expected revenue from a dataframe:
+        
+        Parameters:
+            DataFrame (pd.DataFrame): The dataframe to which this method will be applied.
+        
+        Returns:
+            total_expected_revenue (int): The total expected revenue.
+        '''
+
+        def calculate_total_revenue(row): # Function used to calculate total expected revenue for each loan.
+            if row['term'] == '36 months': # In 36 month terms
+                return 36 * row['instalment'] # Number of instalments * value of instalments = Total expected revenue.
+            elif row['term'] == '60 months': # In 60 month terms
+                return 60 * row['instalment'] # Number of instalments * value of instalments = Total expected revenue.
+
+        DataFrame['total_revenue'] = DataFrame.apply(calculate_total_revenue, axis=1)
+        total_expected_revenue = DataFrame['total_revenue'].sum()
+
+        return total_expected_revenue
+

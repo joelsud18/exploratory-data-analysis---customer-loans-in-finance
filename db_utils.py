@@ -73,7 +73,7 @@ def save_data_to_csv(loans_df: pd.DataFrame):
         loans_df (pd.DataFrame): The 'loan_payments' dataframe that will be written into a csv file..
     '''
 
-    with open('loan_payments.csv', 'w') as file:
+    with open('loan_payments_versions/loan_payments.csv', 'w') as file:
         loans_df.to_csv(file, encoding= 'utf-8', index= False)
 
 if __name__ == '__main__':

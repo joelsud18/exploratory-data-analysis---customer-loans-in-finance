@@ -1,9 +1,9 @@
-import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.svm import SVC
-from sklearn.preprocessing import RobustScaler
+import pandas as pd
 from scipy import stats
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import RobustScaler
+from sklearn.svm import SVC
 # Auxiliary classes:
 from dataframeinfo import DataFrameInfo as info
 from plotter import Plotter as plotter
