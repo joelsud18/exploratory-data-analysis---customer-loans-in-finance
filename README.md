@@ -2,9 +2,10 @@
 By **Joel Sud**
 ## Table of Contents:
 - [Description](#description)
-- [Installation Instructions](#installation_instructions)
-- [Usage Instructions](#usage_instructions)
-- [File Structure](#file_structure)
+    - [Key Insights](#key-insights)
+- [Installation Instructions](#installation-instructions)
+- [Usage Instructions](#usage-instructions)
+- [File Structure](#file-structure)
     - [File Description](#understanding-the-files)
 - [Project Documentation](#project-documentation)
 
@@ -13,7 +14,29 @@ This is an Ai Core project with the aim of conducting Exploratory Data Analysis 
 
 This data is then transformed to impute and remove nulls, optimise skewness, remove outliers and identify correlation. Analysis and visualisation is then performed on this data to gain insights on the current state of loans, current and potential losses as well as identifying indicators of risk.
 
-## Installation_Instructions:
+Here are some examples of the types of visualisations produced from the EDA:
+
+![discrete visuals](subsidiary_material/discrete_visuals.png)
+
+![continuous visuals](subsidiary_material/continuous_visuals.png)
+
+### Key insights:
+
+Here are some of the key insights from the EDA process:
+
+- 90 % of all funded amounts have been recovered.
+- Collections over the next 6 months will recover 18 % of all loans and 120 % of currently outstanding loan amounts (cover all currently outsanding funds).
+- 1 in every 10 loans is 'Charged Off'.
+- under 50 % of 'Charged Off' loan funds issued were recovered, if these loans had been fully paid then they would have generated 70 million additional revenue.
+- 5 % of current loans are deemed 'Risky' or behind on payments, which has a potential loss of 9 million.
+- Grade 'A' loans are safest, grade 'D' and 'E' should be issued with caution.
+- 60 month terms are riskier than average.
+- Renters pose slightly greater risk than mortgage payers.
+- 'Charged Off' and 'Defaulted' loan customers have a 10 % lower average income than fully paid off loans.
+- The lower the interest rates, loan amounts and monthly instalment amounts, the lower the risk of loss.
+- 'Dti' is positively correlated with risk of loss.
+
+## Installation Instructions:
 1. **Download and clone repository:**
 - copy the repository URL by clicking '*<> Code*' above the list of files in GitHub Repo. Then copy and paste the '*HTTPS*' URL:
 - in your CLI go to the location where you wish to clone your directory.
@@ -30,7 +53,7 @@ This data is then transformed to impute and remove nulls, optimise skewness, rem
     
 - you can add the ***--name*** flag to give a name to this environment.
 
-## Usage_Instructions
+## Usage Instructions
 1. First ensure the appropriate conda environment is set up.
 2. Run the '*db_utils.py*' file to extract the data from an AWS Relational Database and write it into the appropriate csv file. This requires the .yaml credentials for the AWS RDS.
     - Since this is confidential, **SKIP THIS STEP**, This file has already been run and the csv file has been included within this repository, as '*loan_payments.csv*'.
@@ -38,7 +61,7 @@ This data is then transformed to impute and remove nulls, optimise skewness, rem
     - Read through this notebook to understand the EDA process.
 4. The '*skewness_transformations_visualisation.ipynb*' and '*outlier_removal_visualisation.ipynb*' notebooks **can** be run to be updated and to see in more detail the transformations that were done on every column at these steps.
 5. The '*analysis_and_visualisation.ipynb*' notebook should then be run. This provides insights, conclusions and visualisations from the transformed data. Analysis on the current state of loans, current and potential losses as well as identifying risk indicating variables are provided in this notebook.
-## File_Structure:
+## File Structure:
 - EDA
     - loan_payments_versions
         - loan_payments.csv *[Raw Data]*
@@ -58,6 +81,9 @@ This data is then transformed to impute and remove nulls, optimise skewness, rem
     - skewness_transformations_visualisation.ipynb
     - outlier_removal_visualisation.ipynb
     - README.md
+    - subsidiary_material
+        - discrete_visuals.png
+        - continuous_visuals.png
 
 #### Understanding the Files:
 - **EDA.ipynb**: This is the notebook in which the exploratory data analysis is conducted, this should be run and read to understand the EDA and dataframe transformation process.
@@ -71,6 +97,7 @@ This data is then transformed to impute and remove nulls, optimise skewness, rem
 - **plotter.py**: This is a python script that defines the Plotter() class, this class is used to provide visualisations on the dataframe. This is imported as a module into the '*EDA.ipynb*' notebook.
 - **skewness_transformations_visualisation.ipynb**: This is a notebook which contains more detail on the skewness corrections than shown in the '*EDA.ipynb*'. It shows every transformation done on columns.
 - **outlier_removal_visualisation.ipynb**: This is a notebook which contains more detail on the outlier removal than shown in the '*EDA.ipynb*'. It shows every transformation done on columns.
+- **subsidiary_material**: This folder contains screenshots for this README.md file.
 
 ## Project Documentation:
 
